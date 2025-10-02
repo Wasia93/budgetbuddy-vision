@@ -22,13 +22,16 @@ const AddExpense = () => {
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("food");
+  
+  const userCountryData = localStorage.getItem("userCountry");
+  const userCountry = userCountryData ? JSON.parse(userCountryData) : { symbol: "$", currency: "USD" };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     toast({
       title: "Expense added!",
-      description: `$${amount} added to ${categories.find(c => c.id === selectedCategory)?.name}`,
+      description: `${userCountry.symbol}${amount} added to ${categories.find(c => c.id === selectedCategory)?.name}`,
     });
     
     navigate("/dashboard");
@@ -57,7 +60,7 @@ const AddExpense = () => {
               Amount
             </Label>
             <div className="flex items-center gap-2">
-              <span className="text-4xl font-bold text-muted-foreground">$</span>
+              <span className="text-4xl font-bold text-muted-foreground">{userCountry.symbol}</span>
               <Input
                 id="amount"
                 type="number"

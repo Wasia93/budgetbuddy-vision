@@ -22,16 +22,40 @@ const slides = [
     title: "Get Smart Insights",
     description: "Receive AI-powered suggestions to optimize your budget and save more.",
   },
+  {
+    image: "",
+    title: "Select Your Country",
+    description: "Choose your country to set up your preferred currency.",
+    isCountrySelect: true,
+  },
 ];
 
 const Onboarding = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [selectedCountry, setSelectedCountry] = useState("US");
   const navigate = useNavigate();
+
+  const countries = [
+    { code: "US", name: "United States", currency: "USD", symbol: "$" },
+    { code: "PK", name: "Pakistan", currency: "PKR", symbol: "₨" },
+    { code: "GB", name: "United Kingdom", currency: "GBP", symbol: "£" },
+    { code: "EU", name: "European Union", currency: "EUR", symbol: "€" },
+    { code: "IN", name: "India", currency: "INR", symbol: "₹" },
+    { code: "JP", name: "Japan", currency: "JPY", symbol: "¥" },
+    { code: "CN", name: "China", currency: "CNY", symbol: "¥" },
+    { code: "CA", name: "Canada", currency: "CAD", symbol: "$" },
+    { code: "AU", name: "Australia", currency: "AUD", symbol: "$" },
+  ];
 
   const handleNext = () => {
     if (currentSlide < slides.length - 1) {
       setCurrentSlide(currentSlide + 1);
     } else {
+      // Save selected country to localStorage for now
+      const selectedCountryData = countries.find(c => c.code === selectedCountry);
+      if (selectedCountryData) {
+        localStorage.setItem("userCountry", JSON.stringify(selectedCountryData));
+      }
       navigate("/auth");
     }
   };
@@ -50,17 +74,60 @@ const Onboarding = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <div className="flex-1 flex flex-col items-center justify-center p-6 pb-32">
         <div className="w-full max-w-md animate-fade-in">
-          <img
-            src={slides[currentSlide].image}
-            alt={slides[currentSlide].title}
-            className="w-72 h-72 object-contain mx-auto mb-12"
-          />
-          <h2 className="text-3xl font-bold text-center mb-4">
-            {slides[currentSlide].title}
-          </h2>
-          <p className="text-lg text-muted-foreground text-center px-6">
-            {slides[currentSlide].description}
-          </p>
+          {slides[currentSlide].isCountrySelect ? (
+            <div className="space-y-6">
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold mb-4">
+                  {slides[currentSlide].title}
+                </h2>
+                <p className="text-lg text-muted-foreground">
+                  {slides[currentSlide].description}
+                </p>
+              </div>
+              
+              <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+                {countries.map((country) => (
+                  <button
+                    key={country.code}
+                    onClick={() => setSelectedCountry(country.code)}
+                    className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
+                      selectedCountry === country.code
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-muted-foreground/30"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold">{country.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {country.currency} ({country.symbol})
+                        </p>
+                      </div>
+                      {selectedCountry === country.code && (
+                        <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                          <div className="w-2 h-2 rounded-full bg-white" />
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <>
+              <img
+                src={slides[currentSlide].image}
+                alt={slides[currentSlide].title}
+                className="w-72 h-72 object-contain mx-auto mb-12"
+              />
+              <h2 className="text-3xl font-bold text-center mb-4">
+                {slides[currentSlide].title}
+              </h2>
+              <p className="text-lg text-muted-foreground text-center px-6">
+                {slides[currentSlide].description}
+              </p>
+            </>
+          )}
         </div>
 
         {/* Dots indicator */}

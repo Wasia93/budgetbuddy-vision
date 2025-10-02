@@ -23,27 +23,25 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
 
-  // Mock data
-  const balance = 5420.50;
-  const monthlyBudget = 3000;
-  const spent = 1845.30;
-  const saved = 1575.20;
-  const savingsGoal = 10000;
-  const currentSavings = 6234.50;
+  // Get user country from localStorage
+  const userCountryData = localStorage.getItem("userCountry");
+  const userCountry = userCountryData ? JSON.parse(userCountryData) : { symbol: "$", currency: "USD" };
 
-  const recentTransactions = [
-    { id: 1, name: "Grocery Store", amount: -65.50, category: "food", date: "Today" },
-    { id: 2, name: "Salary Deposit", amount: 3500, category: "income", date: "Yesterday" },
-    { id: 3, name: "Uber Ride", amount: -12.30, category: "transport", date: "Yesterday" },
-    { id: 4, name: "Electric Bill", amount: -89, category: "bills", date: "2 days ago" },
-    { id: 5, name: "Shopping Mall", amount: -156.20, category: "shopping", date: "3 days ago" },
-  ];
+  // Mock data - starting from 0
+  const balance = 0;
+  const monthlyBudget = 3000;
+  const spent = 0;
+  const saved = 0;
+  const savingsGoal = 10000;
+  const currentSavings = 0;
+
+  const recentTransactions: Array<{id: number; name: string; amount: number; category: string; date: string}> = [];
 
   const categories = [
-    { name: "Food", icon: Utensils, amount: 456.20, color: "text-orange-500", bgColor: "bg-orange-100" },
-    { name: "Transport", icon: Car, amount: 234.50, color: "text-blue-500", bgColor: "bg-blue-100" },
-    { name: "Bills", icon: Home, amount: 567.80, color: "text-purple-500", bgColor: "bg-purple-100" },
-    { name: "Shopping", icon: ShoppingCart, amount: 586.80, color: "text-pink-500", bgColor: "bg-pink-100" },
+    { name: "Food", icon: Utensils, amount: 0, color: "text-orange-500", bgColor: "bg-orange-100" },
+    { name: "Transport", icon: Car, amount: 0, color: "text-blue-500", bgColor: "bg-blue-100" },
+    { name: "Bills", icon: Home, amount: 0, color: "text-purple-500", bgColor: "bg-purple-100" },
+    { name: "Shopping", icon: ShoppingCart, amount: 0, color: "text-pink-500", bgColor: "bg-pink-100" },
   ];
 
   const getCategoryIcon = (category: string) => {
@@ -96,8 +94,8 @@ const Dashboard = () => {
               <p className="text-sm opacity-90">Total Balance</p>
               <Wallet className="h-5 w-5 opacity-90" />
             </div>
-            <h2 className="text-4xl font-bold mb-1">${balance.toFixed(2)}</h2>
-            <p className="text-sm opacity-75">+${saved.toFixed(2)} this month</p>
+            <h2 className="text-4xl font-bold mb-1">{userCountry.symbol}{balance.toFixed(2)}</h2>
+            <p className="text-sm opacity-75">{saved > 0 ? `+${userCountry.symbol}${saved.toFixed(2)} this month` : 'Start tracking your expenses'}</p>
           </CardContent>
         </Card>
 
@@ -111,10 +109,10 @@ const Dashboard = () => {
                 </div>
                 <p className="text-sm text-muted-foreground">Spent</p>
               </div>
-              <p className="text-2xl font-bold">${spent.toFixed(2)}</p>
+              <p className="text-2xl font-bold">{userCountry.symbol}{spent.toFixed(2)}</p>
               <Progress value={spentPercentage} className="mt-2 h-2" />
               <p className="text-xs text-muted-foreground mt-1">
-                {spentPercentage.toFixed(0)}% of ${monthlyBudget}
+                {spentPercentage.toFixed(0)}% of {userCountry.symbol}{monthlyBudget}
               </p>
             </CardContent>
           </Card>
@@ -127,10 +125,10 @@ const Dashboard = () => {
                 </div>
                 <p className="text-sm text-muted-foreground">Goal</p>
               </div>
-              <p className="text-2xl font-bold">${currentSavings.toFixed(0)}</p>
+              <p className="text-2xl font-bold">{userCountry.symbol}{currentSavings.toFixed(0)}</p>
               <Progress value={savingsPercentage} className="mt-2 h-2" />
               <p className="text-xs text-muted-foreground mt-1">
-                {savingsPercentage.toFixed(0)}% of ${savingsGoal}
+                {savingsPercentage.toFixed(0)}% of {userCountry.symbol}{savingsGoal}
               </p>
             </CardContent>
           </Card>
@@ -150,7 +148,7 @@ const Dashboard = () => {
                   </div>
                   <span className="font-medium">{category.name}</span>
                 </div>
-                <span className="font-semibold">${category.amount.toFixed(2)}</span>
+                <span className="font-semibold">{userCountry.symbol}{category.amount.toFixed(2)}</span>
               </div>
             ))}
           </CardContent>
@@ -161,29 +159,40 @@ const Dashboard = () => {
           <CardHeader>
             <CardTitle className="text-lg">Recent Transactions</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {recentTransactions.map((transaction) => (
-              <div key={transaction.id} className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className={cn(
-                    "p-2 rounded-lg",
-                    transaction.amount > 0 ? "bg-success-light" : "bg-muted"
-                  )}>
-                    {getCategoryIcon(transaction.category)}
-                  </div>
-                  <div>
-                    <p className="font-medium">{transaction.name}</p>
-                    <p className="text-xs text-muted-foreground">{transaction.date}</p>
-                  </div>
-                </div>
-                <span className={cn(
-                  "font-semibold",
-                  transaction.amount > 0 ? "text-success" : "text-foreground"
-                )}>
-                  {transaction.amount > 0 ? "+" : ""}${Math.abs(transaction.amount).toFixed(2)}
-                </span>
+          <CardContent>
+            {recentTransactions.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground mb-2">No transactions yet</p>
+                <p className="text-sm text-muted-foreground">
+                  Tap the + button to add your first expense
+                </p>
               </div>
-            ))}
+            ) : (
+              <div className="space-y-3">
+                {recentTransactions.map((transaction) => (
+                  <div key={transaction.id} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={cn(
+                        "p-2 rounded-lg",
+                        transaction.amount > 0 ? "bg-success-light" : "bg-muted"
+                      )}>
+                        {getCategoryIcon(transaction.category)}
+                      </div>
+                      <div>
+                        <p className="font-medium">{transaction.name}</p>
+                        <p className="text-xs text-muted-foreground">{transaction.date}</p>
+                      </div>
+                    </div>
+                    <span className={cn(
+                      "font-semibold",
+                      transaction.amount > 0 ? "text-success" : "text-foreground"
+                    )}>
+                      {transaction.amount > 0 ? "+" : ""}{userCountry.symbol}{Math.abs(transaction.amount).toFixed(2)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </main>
